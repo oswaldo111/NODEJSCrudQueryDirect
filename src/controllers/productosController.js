@@ -6,8 +6,8 @@ export const ProductsGet = async (req, res) => {
 }
 
 export const ProductsCreate = async (req, res) => {
+    
     const { descripcion, nombre, precio } = req.body;
-
     const [filas] = await pool.query(
         'insert into products(descripcionoucr,nombreoucr,preciooucr) values(?,?,?)',
         [descripcion, nombre, precio]);
@@ -17,29 +17,30 @@ export const ProductsCreate = async (req, res) => {
 
 export const ProductsDelete = async (req, res) => {
     const { id } = req.body;
-
     const [DeleteRaw] = await pool.query(
-        'delete from products where id = ?',
-        [id]
+        'delete from products where id = ?', [id]
     );
-    res.send({ DeleteRaw });
+
+    if (DeleteRaw.affectedRows == 0) {
+        res.send('no se encontro el id');
+    }
+    else {
+        res.send({ DeleteRaw });
+    }
 }
 
 export const ProductsUpdate = async (req, res) => {
 
     const { id, descripcion, nombre, precio } = req.body;
+    const [UpdateRaws] = await pool.query(
+        'update products set descripcionoucr = ?, nombreoucr = ?, preciooucr = ? where id = ?',
+        [descripcion, nombre, precio, id]
+    );
 
-    const ProductExist = await ProductstId(id);
-
-    if (!ProductExist) {
+    if (UpdateRaws.affectedRows == 0) {
         res.send('no se encontro el id')
     }
-    else{
-
-        const [UpdateRaws] = await pool.query(
-            'update products set descripcionoucr = ?, nombreoucr = ?, preciooucr = ? where id = ?',
-            [descripcion, nombre, precio, id]
-        );
+    else {
         res.send({ UpdateRaws });
     }
 }
@@ -47,22 +48,24 @@ export const ProductsUpdate = async (req, res) => {
 export const ProductstgetId = async (req, res) => {
     const { id } = req.body;
 
-    const ProductExist = await ProductstId(id);
-    console.log(ProductExist)
-    if (!ProductExist) {
+    const [searchId] = await pool.query('select * from products where id = ?', [id]);
+   
+    if (searchId.length == 0) {
         res.send('no se a encontrado el id');
     }
     else {
-        res.send(ProductExist);
+        res.send(searchId);
     }
 }
-export const ProductstId = async (id) => {
-    const [searchId] = await pool.query('select * from products where id = ?', [id]);
 
-    if (searchId.length === 0) {
-        return false;
-    }
-    else {
-        return searchId[0];
-    }
-}
+
+// export const ProductstId = async (id) => {
+//     const [searchId] = await pool.query('select * from products where id = ?', [id]);
+
+//     if (searchId.length === 0) {
+//         return false;
+//     }
+//     else {
+//         return searchId[0];
+//     }
+// }
